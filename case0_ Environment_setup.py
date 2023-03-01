@@ -39,7 +39,7 @@ def main():
     rect_center = (rect_width/2, rect_height/2)                                                                                                 # Object center-point
     rect_position = (rect_center[0], rect_center[1])                                                                                            # location to place rectangle
 
-    # Tray mass and friction
+    # Tray mass and friction; This is fixed to 10kg (if tray mass is less than the obj mass, it will partly submerged the tray into the ground)
     rect_mass = 10                                                                                                                                    # kg unit
     rect_density = rect_mass * 1 * 0.25                                                                                                            # area; sq.meter unit
     rect_friction = 1.0
@@ -57,9 +57,11 @@ def main():
     square_position = (rect_center[0], rect_height+square_height/2)                                                                             # location to place square; same x-pos, y-pos = rect_height+center_sq
 
     # Object mass and friction
-    obj_mass = 0.3                                                                                                                             # kg unit
+    ## This part can be edited to change the property of the object
+    ## Note: if the object size is changed, its initial position between box2d and pygame should be recalibrated
+    obj_mass = 0.03                                                                                                                             # kg unit
     obj_density = obj_mass * 0.25 * 0.25                                                                                                        # area; sq.meter unit
-    obj_friction = 0.5
+    obj_friction = 1.0
 
     # Box2Drect located at the left-bottom of the screen (y-up)
     square_body = world.CreateDynamicBody(position= square_position, angle =0.0)
@@ -79,12 +81,12 @@ def main():
     # Define the Pygame clock
     clock = pygame.time.Clock()
 
-    #mICO Initialization
+    # mICO Initialization
     attempt = 1
     t_prev = 0
     sr_prev = 0
     wa = 0.0
-    filename = 'case5_square_25cm_300g_0.5f_mICO.csv'                                                                                           # Output filename
+    filename = 'case0_Environment_setup.csv'                                                                                                 # Output filename
     redo = 0
     filecheck(filename)                                                                                                                         # Check file write available
 
@@ -108,16 +110,20 @@ def main():
                 quit()
 
         # Handle key presses
-        # LinearVelocity is pixel/second (considering on PPM) i.e., if we want 2 m/s then we should use 2*PPM = 400
+        ## LinearVelocity is pixel/second (considering on PPM) i.e., if we want 2 m/s then we should use 2*PPM = 400
+        ## The rect_body.linearVelocity() will be the major output method in case of applying the other learning.
+        ## In this case we use the velocity unit of 1500 to make the object intentionally slide off the tray. The speed lower than that does not trigger the learning as it does not move through the reflexive area.
+        ## Enable the comment to manually control the tray with left and right arrow at 1500 pixel/s
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             pass
-            #rect_body.linearVelocity = (-1.5*PPM, 0)                                                                                           # For manual test; moving to the left
-            #print(rect_body.linearVelocity)
+            rect_body.linearVelocity = (-1500, 0)                                                                                           # For manual test; moving to the left
+            print(rect_body.linearVelocity)
         if keys[pygame.K_RIGHT]:
             pass
-            #rect_body.linearVelocity = (1.5*PPM, 0)                                                                                            # For manual test; moving to the right
-            #print(rect_body.linearVelocity)
+            rect_body.linearVelocity = (1.5*PPM, 0)                                                                                                # For manual test; moving to the right
+            print(rect_body.linearVelocity)
         if keys[pygame.K_r]:                                                                                                                    
             reset()                                                                                                                             # For manula test; manual reset position
         if keys[pygame.K_ESCAPE]:
@@ -130,88 +136,86 @@ def main():
         square_pos = square_body.position
         square_rot = square_body.angle
 
-        ######################################################################################## mICO loop part ###########################################################################################
+        # ######################################################################################## mICO loop part ###########################################################################################
 
-        # start message: print attempt number
-        print('==============================================================================')
-        print('attempt: ', attempt)
+        # # start message: print attempt number
+        # print('==============================================================================')
+        # print('attempt: ', attempt)
 
-        # Simulation time
-        sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
-        print("sim_time: ", sim_time)
+        # # Simulation time
+        # sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
+        # print("sim_time: ", sim_time)
 
-        # signal generator
-        xc = square_pos.x                                                                                                                       # Current X-position of the square object
-        xr = rect_pos.x                                                                                                                         # Reference X-position of the rectangle cart
-        so, sp, sr = signal_generator(xc, xr)                                                                                                   
+        # # signal generator
+        # xc = square_pos.x                                                                                                                       # Current X-position of the square object
+        # xr = rect_pos.x                                                                                                                         # Reference X-position of the rectangle cart
+        # so, sp, sr = signal_generator(xc, xr)                                                                                                   
 
-        # Signal log for debugging purpose
-        # print("SO: ", so)
-        # print("SP: ", sp)
-        # print("SR: ", sr)
+        # # Signal log for debugging purpose
+        # # print("SO: ", so)
+        # # print("SP: ", sp)
+        # # print("SR: ", sr)
 
-        # load the adaptive weight
-        wa = load(filename)
+        # # load the adaptive weight
+        # wa = load(filename)
 
-        # In case of adaptive weight is more than 1, the learning is automatically failed due to the weight updated too fast. Try to tune the learning weight.
-        if wa > 1:
-            print("Failed on learning")
-            time.sleep(30)
-            sys.exit()
+        # # In case of adaptive weight is more than 1, the learning is automatically failed due to the weight updated too fast. Try to tune the learning weight.
+        # if wa > 1:
+        #     print("Failed on learning")
+        #     time.sleep(30)
+        #     sys.exit()
    
-        # When the object is out of the learning area. Reset position, previous reflexive signal and increase attempt
-        if so == 0 or sr == 1:
-            reset()                                                                                                                            
-            sr_prev = 0.0
-            print('-----------------------------------------------resetting-----------------------------------------------')
-            attempt += 1                                                                                                                      
+        # # When the object is out of the learning area. Reset position, previous reflexive signal and increase attempt
+        # if so == 0 or sr == 1:
+        #     reset()                                                                                                                            
+        #     sr_prev = 0.0
+        #     print('-----------------------------------------------resetting-----------------------------------------------')
+        #     attempt += 1                                                                                                                      
 
 
-        else: 
-            o_neural, new_w, d, t, s = o_learning(filename, so, sp, sr, sim_time, t_prev, wa, sr_prev)                                          # main mICO method
+        # else: 
+        #     o_neural, new_w, d, t, s = o_learning(filename, so, sp, sr, sim_time, t_prev, wa, sr_prev)                                          # main mICO method
 
-            # Store the previous time, reflex signal
-            t_prev = t
-            sr_prev = s
+        #     # Store the previous time, reflex signal
+        #     t_prev = t
+        #     sr_prev = s
 
-            # variables output log
-            # print("w_after:", new_w)
-            # print("o_nueral:", o_neural)
-            # print("t_prev: ", t)
-            # print("s_prev: ",s)
+        #     # variables output log
+        #     # print("w_after:", new_w)
+        #     # print("o_nueral:", o_neural)
+        #     # print("t_prev: ", t)
+        #     # print("s_prev: ",s)
 
-            # convert neural output to rectangle output
-            speed = o_speed(o_neural)
+        #     # convert neural output to rectangle output
+        #     speed = o_speed(o_neural)
 
-            # Save everything to csv file
-            save(filename, attempt, sim_time, new_w, sp, sr,  d, o_neural, speed)
+        #     # Save everything to csv file
+        #     save(filename, attempt, sim_time, new_w, sp, sr,  d, o_neural, speed)
 
-            # If the speed is lower than the threshold without reaching the goal, it has to be stopped and move on to the next attempt
-            if speed  < 1:
-                speed = 0
-                reset()
-                attempt +=1
+        #     # If the speed is lower than the threshold without reaching the goal, it has to be stopped and move on to the next attempt
+        #     if speed  < 1:
+        #         speed = 0
+        #         reset()
+        #         attempt +=1
 
-            # Output to simulation
-            print("o_speed: ", speed)
-            rect_body.linearVelocity = (speed, 0)  
+        #     # Output to simulation
+        #     print("o_speed: ", speed)
+        #     rect_body.linearVelocity = (speed, 0)  
 
-            # This condition is used to execute one more attempt to confirm the weight.
-            if rect_pos.x >=699:
-                reset()
-                sr_prev = 0.0
-                redo += 1
-                attempt +=1
+        #     # This condition is used to execute one more attempt to confirm the weight.
+        #     if rect_pos.x >=699:
+        #         reset()
+        #         sr_prev = 0.0
+        #         redo += 1
+        #         attempt +=1
 
-        ###################################################################################### End mICO loop part ##########################################################################################
+        # ###################################################################################### End mICO loop part ##########################################################################################
 
         ##################################################################################### Continue Game Loop ###########################################################################################
 
         screen.fill((255, 255, 255))                                                                                                        # Clear the screen
         
         # Draw elements on Pygame (y-down)
-
-
         # Draw walls
         pygame.draw.line(screen, WALL_COLOR, (0, SCREEN_HEIGHT), (SCREEN_WIDTH, SCREEN_HEIGHT), width = WALL_WIDTH)                         # Ground
         pygame.draw.line(screen, WALL_COLOR, (0, 0), (SCREEN_WIDTH, 0), width = WALL_WIDTH)                                                 # Ceiling
@@ -241,7 +245,7 @@ def signal_generator(xc,  xr):
     
     # Range threshold between current position (object) and reference position (center of the tray)
     et = 10                                                                                                                                # Exemption threshold; allows the object to move without triggering learning mechanism
-    pt =  30                                                                                                                               # Predictive threshold; prior signal for the robot to 'soft-adapt' itself (reduce speed without any learning)
+    pt = 30                                                                                                                                # Predictive threshold; prior signal for the robot to 'soft-adapt' itself (reduce speed without any learning)
     rt = 70                                                                                                                                # Reflexive threshold; later signal used to trigger learning mechanism
 
     # Conditions for each threshold (with the normalization)
@@ -334,7 +338,7 @@ def update_weight(sp, sr, sr_prev, wa, t, t_prev):
     return new_wa, delta
 
 def o_speed(o_learning):
-    # This is the maximum speed available in the simulation (m/s)
+    # This is the maximum speed available in the simulation (pixel/s)
     max = 1500
     o_speed = max - (max * o_learning)
     return o_speed
