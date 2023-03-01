@@ -30,7 +30,7 @@ def main():
     right_wall_body = world.CreateStaticBody(position=(SCREEN_WIDTH, 0), shapes=Box2D.b2EdgeShape(vertices=[(0, 0), (0, SCREEN_HEIGHT)]))
     ground_body = world.CreateStaticBody(position=(0, WALL_WIDTH))    
     ground_shape = Box2D.b2EdgeShape(vertices=[(0, 0), (SCREEN_WIDTH, 0)])
-    ground_fixture = ground_body.CreateFixture(shape=ground_shape, density=0.0, friction=1.0)
+    ground_fixture = ground_body.CreateFixture(shape=ground_shape, density=1.0, friction=1.0)
 
     # Rectangle Initialization
     RECT_COLOR = (255, 0, 0)                                                                                                                    # Red
@@ -39,22 +39,34 @@ def main():
     rect_center = (rect_width/2, rect_height/2)                                                                                                 # Object center-point
     rect_position = (rect_center[0], rect_center[1])                                                                                            # location to place rectangle
 
+    # Tray mass and friction
+    rect_mass = 10                                                                                                                                    # kg unit
+    rect_density = rect_mass * 1 * 0.25                                                                                                            # area; sq.meter unit
+    rect_friction = 1.0
+
     # Box2Drect located at the left-bottom of the screen (y-up)
     rect_body = world.CreateDynamicBody(position= (rect_position), angle =0.0)
     rect_shape = Box2D.b2PolygonShape(box= rect_center)
-    rect_fixture = rect_body.CreateFixture(shape=rect_shape, density=1.0, friction=1.0)
+    rect_fixture = rect_body.CreateFixture(shape=rect_shape, density=rect_density, friction=rect_friction)                                                         # 10kg tray; mass(kg) = density*area(cm^2)
 
-    # # Square Initialization
+    # Square Initialization
     SQUARE_COLOR = (0, 0, 255)                                                                                                                  # Blue
     square_width = 0.25 * PPM                                                                                                                   # 50 pxl
     square_height = 0.25 * PPM                                                                                                                  # 50 pxl
     square_center = (square_width/2, square_height/2)                                                                                           # Object center-point
     square_position = (rect_center[0], rect_height+square_height/2)                                                                             # location to place square; same x-pos, y-pos = rect_height+center_sq
 
+    # Object mass and friction
+    obj_mass = 3                                                                                                                                    # kg unit
+    obj_density = obj_mass * 0.25 * 0.25                                                                                                            # area; sq.meter unit
+    obj_friction = 1.0
+
     # Box2Drect located at the left-bottom of the screen (y-up)
     square_body = world.CreateDynamicBody(position= square_position, angle =0.0)
     square_shape = Box2D.b2PolygonShape(box=square_center) 
-    square_fixture = square_body.CreateFixture(shape=square_shape, density=1.0, friction=1.0)                                                   # Fixture to define object property
+    square_fixture = square_body.CreateFixture(shape=square_shape, density=obj_density, friction= obj_friction)                                                 #
+
+
 
     # Objects information
     # rect_mass = rect_fixture.body.mass
@@ -72,7 +84,7 @@ def main():
     t_prev = 0
     sr_prev = 0
     wa = 0.0
-    filename = 'case1_square_25cm_mICO.csv'                                                                                                     # Output filename
+    filename = 'case3_square_25cm_3kg_mICO.csv'                                                                                                 # Output filename
     redo = 0
     filecheck(filename)                                                                                                                         # Check file write available
 
@@ -96,26 +108,23 @@ def main():
                 quit()
 
         # Handle key presses
+        # LinearVelocity is pixel/second (considering on PPM) i.e., if we want 2 m/s then we should use 2*PPM = 400
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             pass
-            # rect_body.linearVelocity = (-10, 0)                                                                                               # For manual test; moving to the left
+            #rect_body.linearVelocity = (-1.5*PPM, 0)                                                                                               # For manual test; moving to the left
+            #rect_body.ApplyLinearImpulse((-10000000,0), rect_body.worldCenter,  True)                                                          # Test impulse
+            #print(rect_body.linearVelocity)
         if keys[pygame.K_RIGHT]:
             pass
-            # rect_body.linearVelocity = (10, 0)                                                                                                # For manual test; moving to the right
+            #rect_body.linearVelocity = (1.5*PPM, 0)                                                                                                # For manual test; moving to the right
+            #rect_body.ApplyLinearImpulse((100000,0), rect_body.worldCenter, True)                                                              # Test impulse
+            #print(rect_body.linearVelocity)
         if keys[pygame.K_r]:                                                                                                                    
             reset()                                                                                                                             # For manula test; manual reset position
         if keys[pygame.K_ESCAPE]:
             pygame.quit()
             exit()
-
-        # start message: print attempt number
-        print('==============================================================================')
-        print('attempt: ', attempt)
-
-        # Simulation time
-        sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
-        print("sim_time: ", sim_time)
 
         # Get the position and rotation of the rectangle/square
         rect_pos = rect_body.position
@@ -124,6 +133,14 @@ def main():
         square_rot = square_body.angle
 
         ######################################################################################## mICO loop part ###########################################################################################
+
+        # start message: print attempt number
+        print('==============================================================================')
+        print('attempt: ', attempt)
+
+        # Simulation time
+        sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
+        print("sim_time: ", sim_time)
 
         # signal generator
         xc = square_pos.x                                                                                                                       # Current X-position of the square object
@@ -284,7 +301,7 @@ def o_learning(filename, so, sp, sr, t, t_prev, wa, sr_prev):
 def update_weight(sp, sr, sr_prev, wa, t, t_prev):
 
     # This learning rate has to be adjusted in case that the weight reaches 1 too fast.
-    l_rate = 0.001
+    l_rate = 0.01
 
     # delta terms
     sr_delta = sr-sr_prev
@@ -320,7 +337,7 @@ def update_weight(sp, sr, sr_prev, wa, t, t_prev):
 
 def o_speed(o_learning):
     # This is the maximum speed available in the simulation (m/s)
-    max = 120  
+    max = 1500
     o_speed = max - (max * o_learning)
     return o_speed
 
