@@ -68,8 +68,6 @@ def main():
     square_shape = Box2D.b2PolygonShape(box=square_center) 
     square_fixture = square_body.CreateFixture(shape=square_shape, density=obj_density, friction= obj_friction)                                                 #
 
-
-
     # Objects information
     # rect_mass = rect_fixture.body.mass
     # rect_inertia = rect_fixture.body.inertia
@@ -86,7 +84,7 @@ def main():
     t_prev = 0
     sr_prev = 0
     wa = 0.0
-    filename = 'case0_Environment_setup.csv'                                                                                                 # Output filename
+    filename = 'template.csv'                                                                                                 # Output filename
     redo = 0
     filecheck(filename)                                                                                                                         # Check file write available
 
@@ -135,6 +133,9 @@ def main():
         rect_rot = rect_body.angle
         square_pos = square_body.position
         square_rot = square_body.angle
+
+        rect_pos.x
+        square_pos.x
 
         # ######################################################################################## mICO loop part ###########################################################################################
 

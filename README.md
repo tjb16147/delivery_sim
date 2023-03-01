@@ -1,4 +1,7 @@
 # delivery simulator
+
+![Windows environment variables](image/0-delivery_simulator.png)
+
 This delivery simulator is a simplified version in 2D using Pygame and Box2D-python as the physics and game engine. The objective of the simulation is to transport the object (blue square) which is placed on top of the tray (red rectangle) from the bottom-left of the screen to the bottom-right of the screen.
 
 
@@ -9,3 +12,6 @@ This delivery simulator is a simplified version in 2D using Pygame and Box2D-pyt
 * Ubuntu: ```pip install swig```
 * Windows: Download [swig](https://www.swig.org/download.html), extract, and edit windows environment variable inside Path section
 ![Windows environment variables](image/1-path_setup.png)
+4. Box2D ```pip install box2d```
+
+# Environment Template
