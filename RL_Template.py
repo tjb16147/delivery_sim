@@ -71,44 +71,33 @@ square_fixture = square_body.CreateFixture(shape=square_shape, density=obj_densi
 # Define the Pygame clock
 clock = pygame.time.Clock()
                                                                                                                     # Check file write available
-
 #Internal method for resetting the attempt
 def reset():
     rect_body.linearVelocity = (0, 0)                                                                                                       # MaximumlinearVelocity = 120 m/s
     rect_body.position = rect_position
     square_body.linearVelocity = (0,0)
     square_body.position = square_position
-    obs = (square_position, rect_position, rect_body.linearVelocity)
-    return obs
+    # technically same position
+    obs = 0
+    info = 'reset'
+    return obs, info
 
 ################################################################################ End World Initialization ####################################################################################
-
-def policy():
-
-    # replace with policy; for now it's random speed
-    result = random.randint(0,1500)
-    print(result)
-    return result
-
-
-def main():
-    # Initialized reset
-    reset()
-    for _ in range(1500):
-        action = policy()
-    
-        observation, reward, terminated, truncated = step(action)
-        if terminated or truncated:
-            reset()
-    pass
-
 # environment is included in step
 def step(action):
 
     ######################################################################################## Game Loop ###########################################################################################
+    sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
+    # modify this for time limit to truncated the attempt
+    limit = sim_time + 150
 
     # Define the main game loop
     while rect_body.position.x <= 699:
+
+        # update time
+        sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
+
+
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -124,12 +113,12 @@ def step(action):
         diff_x = abs(rect_pos.x-square_pos.x)
         rect_body.linearVelocity = (action, 0)  
 
-        if diff_x <= 30:
-            # Failed experiment
+        if diff_x <= 30 and sim_time <= limit:
             success = True       
         else:
             success = False
             break
+
         ##################################################################################### Continue Game Loop ###########################################################################################
 
         screen.fill((255, 255, 255))                                                                                                        # Clear the screen
@@ -153,16 +142,18 @@ def step(action):
              
     if success:
         reward = 10
+        info = 'success'
     else:
         reward = -1
+        info = 'failed'
 
     terminated = 1
 
-    obs = (square_position, rect_position, rect_body.linearVelocity, square_body.linear_Velocity)
+    # observation is the last diff_x from each step
+    obs = diff_x
     truncated = 0
 
-    print('reward:', reward)
-    return obs, reward, terminated, truncated
+    return obs, reward, terminated, truncated, info
 
     # print('Done simulation')
     # pygame.quit()                                                                                                                          # Quit Pygame
@@ -176,12 +167,31 @@ def action():
 
 
 
+def policy():
+
+    # replace with policy; for now it's random speed
+    result = random.randint(0,1500)
+    return result
+
+
+def main():
+    # Initialized reset
+    reset()
+    for _ in range(1500):
+        print('=====attempt '+str(_+1)+' ======', )
+        action = policy()
+    
+        observation, reward, terminated, truncated, info = step(action)
+        if terminated or truncated:
+            reset()
+        print('action: ', action)
+        print('observation: ', observation)
+        print('reward:', reward)        
+        print('info: ', info)
+
+
 
 ####################################################################################### End RL part #######################################################################################
-
-
-
-
 
 # Method use to rearrange the y-position between pygame and Box2D
 def flip_y(y):
@@ -191,47 +201,11 @@ if __name__ == "__main__":
     main()
 
 
-
-# import gym
-# env = gym.make(xx)              ## create env
-# observation, info = env.reset() ## initialize env
-
-# for _ in range(1000):
-#     action = policy(observation)
-#     observation, reward, terminated, truncated, info = env.step(action)
-
-#     if terminated or truncated:
-#         observation, info = env.reset()
-# env.close
-
-
-# something to generate the action
-def policy():
-    pass
-
-def action():
-    return random.uniform(1, 1500)
-
-def step(goal, diff_x, sim_time):
-    if sim_time >= 100:
-        truncated = 1
-
-    if goal == True and diff_x < 30:
-        reward = 10
-    else:
-        reward = -1
-        terminated = 1
-
-    return reward, terminated, truncated
-
 '''
-action = random speed from 0 to 1500
-step = 1 attempt of delivery
-reward = + successful & stay within diff < 30 unit; else - failed
-terminated = diff > 30 unit
-truncated = maximum time limit for the attempt
-
-reset()
-
-
+obs: last diff_x from each attempt
+action: random speed from 0 to 1500 (can be replaced by policy)
+step: 1 attempt of delivery
+reward: + successful & stay within diff < 30 unit; else - failed
+terminated: diff > 30 unit
+truncated: maximum time limit for the attempt
 '''
