@@ -91,6 +91,9 @@ def step(step_num):
     # modify this for time limit to truncated the attempt
     limit = sim_time + 150
 
+    # first step
+    reward = 0
+
     # Define the main game loop
     for _ in range(1500):
 
@@ -111,15 +114,17 @@ def step(step_num):
 
         diff_x = abs(rect_pos.x-square_pos.x)
 
+        obs = diff_x
+        truncated = 0
+        terminated = 0
+
         # invoke action from policy
-        action = policy()
+        action = policy(obs, reward)
 
         rect_body.linearVelocity = (action, 0)  
 
 
-        obs = diff_x
-        truncated = 0
-        terminated = 0
+
 
         # rewards with conditions
         if diff_x <= 30  and rect_body.position.x <= 699:
