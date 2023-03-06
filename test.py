@@ -83,100 +83,69 @@ def reset():
     return obs, info
 
 ################################################################################ End World Initialization ####################################################################################
+
+def step(action):
+
+    # Apply the action
+    rect_body.linearVelocity = (action, 0)
+
+    # Update physics simulation
+    world.Step(1.0/60, 1, 1)
+
+    # reward
+    reward = get_reward()
+
+    # termination condition
+    terminated = terminate_cond()
+
+    # observation
+    observation = get_observation()
+
+    return observation, reward, terminated
+
 # environment is included in step
-def step(step_num):
+def draw():
+
+    # Get the position and rotation of the rectangle/square
+    rect_pos = rect_body.position
+    square_pos = square_body.position
+    rect_rot = rect_body.angle
+    square_rot = square_body.angle
 
     ######################################################################################## Game Loop ###########################################################################################
     sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
     # modify this for time limit to truncated the attempt
     limit = sim_time + 150
 
-    # first step
-    reward = 0
+    # update time
+    sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
 
-    # Define the main game loop
-    for _ in range(1500):
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
 
-        # update time
-        sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
+    ##################################################################################### Continue Game Loop ###########################################################################################
 
-        # Handle events
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+    screen.fill((255, 255, 255))                                                                                                        # Clear the screen
+    
+    # Draw elements on Pygame (y-down)
+    # Draw walls
+    pygame.draw.line(screen, WALL_COLOR, (0, SCREEN_HEIGHT), (SCREEN_WIDTH, SCREEN_HEIGHT), width = WALL_WIDTH)                         # Ground
+    pygame.draw.line(screen, WALL_COLOR, (0, 0), (SCREEN_WIDTH, 0), width = WALL_WIDTH)                                                 # Ceiling
+    pygame.draw.line(screen, WALL_COLOR, (0, 0), (0, SCREEN_WIDTH), width = WALL_WIDTH)                                                 # Left-Wall
+    pygame.draw.line(screen, WALL_COLOR, (SCREEN_WIDTH, 0), (SCREEN_WIDTH, SCREEN_HEIGHT), width = WALL_WIDTH)                          # Right-wall
 
-        # Get the position and rotation of the rectangle/square
-        rect_pos = rect_body.position
-        square_pos = square_body.position
-        rect_rot = rect_body.angle
-        square_rot = square_body.angle
+    # Draw rectangle; Rect(left, top, width, height)
+    pygame.draw.rect(screen, RECT_COLOR, pygame.Rect((rect_pos.x-rect_center[0],flip_y(rect_pos.y)-rect_center[1]), (rect_width, rect_height), round=rect_rot))
 
-        diff_x = abs(rect_pos.x-square_pos.x)
+    # Draw square
+    pygame.draw.rect(screen, SQUARE_COLOR, pygame.Rect((square_pos.x-square_center[0],flip_y(square_pos.y)-square_center[1]), (square_width, square_height), round=square_rot))
 
-        obs = diff_x
-        truncated = 0
-        terminated = 0
-
-        # invoke action from policy
-        action = policy(obs, reward)
-
-        rect_body.linearVelocity = (action, 0)  
-
-
-
-
-        # rewards with conditions
-        if diff_x <= 30  and rect_body.position.x <= 699:
-            reward = 10
-            info = 'Success: Object stayed in range'
-
-        elif diff_x > 30:
-            reward = -1
-            info = 'Failed: Object slipped too much'
-            terminated = 1
-            reset()
-
-        elif sim_time >= limit:
-            reward = -1
-            info = 'Failed: over time limit'
-            truncated = 1
-            reset()
-
-        else:
-            reward = 10
-            info = 'Success: goal reached'
-            terminated = 1
-            reset()
-
-
-        print('action: ', action)
-        print('observation: ', obs)
-        print('reward:', reward)        
-        print('info: ', info)
-
-        #return obs, reward, terminated, truncated, info
-
-        ##################################################################################### Continue Game Loop ###########################################################################################
-
-        screen.fill((255, 255, 255))                                                                                                        # Clear the screen
-        
-        # Draw elements on Pygame (y-down)
-        # Draw walls
-        pygame.draw.line(screen, WALL_COLOR, (0, SCREEN_HEIGHT), (SCREEN_WIDTH, SCREEN_HEIGHT), width = WALL_WIDTH)                         # Ground
-        pygame.draw.line(screen, WALL_COLOR, (0, 0), (SCREEN_WIDTH, 0), width = WALL_WIDTH)                                                 # Ceiling
-        pygame.draw.line(screen, WALL_COLOR, (0, 0), (0, SCREEN_WIDTH), width = WALL_WIDTH)                                                 # Left-Wall
-        pygame.draw.line(screen, WALL_COLOR, (SCREEN_WIDTH, 0), (SCREEN_WIDTH, SCREEN_HEIGHT), width = WALL_WIDTH)                          # Right-wall
-
-        # Draw rectangle; Rect(left, top, width, height)
-        pygame.draw.rect(screen, RECT_COLOR, pygame.Rect((rect_pos.x-rect_center[0],flip_y(rect_pos.y)-rect_center[1]), (rect_width, rect_height), round=rect_rot))
-
-        # Draw square
-        pygame.draw.rect(screen, SQUARE_COLOR, pygame.Rect((square_pos.x-square_center[0],flip_y(square_pos.y)-square_center[1]), (square_width, square_height), round=square_rot))
-
-        world.Step(1/60, 1, 1)                                                                                                             # Step the Box2D world; step(timestep, vel_step, pos_step)
-        pygame.display.update()                                                                                                            # Update the Pygame display
-        clock.tick(60)
+    # world.Step(1/60, 1, 1)                                                                                                             # Step the Box2D world; step(timestep, vel_step, pos_step)
+    pygame.display.update()                                                                                                            # Update the Pygame display
+    clock.tick(60)
         
 
 
@@ -189,17 +158,60 @@ def step(step_num):
 
 ####################################################################################### RL part #######################################################################################
 
-def policy(obs, reward):
+def policy():
 
     # replace with policy; for now it's random speed
-    result = random.randint(0,1500)
+    result = random.randint(0,10)
     return result
+
+def terminate_cond():
+
+    # calculate object deviation
+    diff_x = (rect_body.position.x-square_body.position.x)
+    # reward manipulation
+    if diff_x > 30 or rect_body.position.x >=699:
+        terminated = 1
+    else:
+        terminated = 0
+    return terminated
+
+def get_reward():
+    
+    # calculate object deviation
+    diff_x = (rect_body.position.x-square_body.position.x)
+    # reward manipulation
+    if diff_x <= 30:
+        reward = 10
+    if diff_x > 30:
+        reward = -1
+    elif rect_body.position.x >= 699:
+        reward = 500
+    return reward
+
+def get_observation():
+    diff_x = (rect_body.position.x-square_body.position.x)
+    # deviation distance, rectangle velocity
+    return (diff_x, rect_body.linearVelocity)
+
 
 def main():
     # Initialized reset
     reset()
 
-    step(1500)
+    for _ in range(1500):
+        action = policy()
+    
+        observation, reward, terminated = step(action)
+        draw()
+    
+        if terminated:
+            reset()
+        print('action: ', action)
+        print('observation: ', observation)
+        print('reward:', reward)        
+        #print('info: ', info)
+
+
 
 
 
@@ -211,8 +223,6 @@ def flip_y(y):
 
 if __name__ == "__main__":
     main()
-
-
 
 
 '''

@@ -84,7 +84,7 @@ def reset():
 
 ################################################################################ End World Initialization ####################################################################################
 # environment is included in step
-def step(action):
+def env(action):
 
     ######################################################################################## Game Loop ###########################################################################################
     sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
@@ -137,14 +137,12 @@ def step(action):
         pygame.draw.rect(screen, SQUARE_COLOR, pygame.Rect((square_pos.x-square_center[0],flip_y(square_pos.y)-square_center[1]), (square_width, square_height), round=square_rot))
 
         world.Step(1/60, 1, 1)                                                                                                             # Step the Box2D world; step(timestep, vel_step, pos_step)
-        #pygame.display.update()                                                                                                            # Update the Pygame display
-        #clock.tick(60)
+        pygame.display.update()                                                                                                            # Update the Pygame display
+        clock.tick(60)
              
     if success:
-        reward = 10
         info = 'success'
     else:
-        reward = -1
         info = 'failed'
 
     terminated = 1
@@ -153,7 +151,7 @@ def step(action):
     obs = diff_x
     truncated = 0
 
-    return obs, reward, terminated, truncated, info
+    return action, terminated, truncated, info
 
     # print('Done simulation')
     # pygame.quit()                                                                                                                          # Quit Pygame
@@ -162,28 +160,31 @@ def step(action):
 
 ####################################################################################### RL part #######################################################################################
 
-def policy():
-
-    # replace with policy; for now it's random speed
-    result = random.randint(0,1500)
-    return result
-
-
 def main():
     # Initialized reset
     reset()
+
+    # Trial and error, first attempt
+    action = random.randint(0,1500)
+
     for _ in range(1500):
         print('=====attempt '+str(_+1)+' ======', )
-        action = policy()
-    
-        observation, reward, terminated, truncated, info = step(action)
+        print('speed: ', action)
+
+        action, terminated, truncated, info = env(action)
         if terminated or truncated:
             reset()
-        print('action: ', action)
-        print('observation: ', observation)
-        print('reward:', reward)        
-        print('info: ', info)
+        if info == 'success':
+            print('Done simulation')
+            break
 
+        # cut the random number range to the action as we know the value more than that is the overspeed
+        action = random.randint(0,action)
+
+        print('info: ', info)
+    
+    print('info: ', info)
+    exit()
 
 
 ####################################################################################### End RL part #######################################################################################
