@@ -84,7 +84,7 @@ def reset():
 
 ################################################################################ End World Initialization ####################################################################################
 # environment is included in step
-def step(action):
+def step(step_num):
 
     ######################################################################################## Game Loop ###########################################################################################
     sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
@@ -92,11 +92,10 @@ def step(action):
     limit = sim_time + 150
 
     # Define the main game loop
-    while rect_body.position.x <= 699:
+    for _ in range(1500):
 
         # update time
         sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
-
 
         # Handle events
         for event in pygame.event.get():
@@ -111,13 +110,47 @@ def step(action):
         square_rot = square_body.angle
 
         diff_x = abs(rect_pos.x-square_pos.x)
+
+        # invoke action from policy
+        action = policy()
+
         rect_body.linearVelocity = (action, 0)  
 
-        if diff_x <= 30 and sim_time <= limit:
-            success = True       
+
+        obs = diff_x
+        truncated = 0
+        terminated = 0
+
+        # rewards with conditions
+        if diff_x <= 30  and rect_body.position.x <= 699:
+            reward = 10
+            info = 'Success: Object stayed in range'
+
+        elif diff_x > 30:
+            reward = -1
+            info = 'Failed: Object slipped too much'
+            terminated = 1
+            reset()
+
+        elif sim_time >= limit:
+            reward = -1
+            info = 'Failed: over time limit'
+            truncated = 1
+            reset()
+
         else:
-            success = False
-            break
+            reward = 10
+            info = 'Success: goal reached'
+            terminated = 1
+            reset()
+
+
+        print('action: ', action)
+        print('observation: ', obs)
+        print('reward:', reward)        
+        print('info: ', info)
+
+        #return obs, reward, terminated, truncated, info
 
         ##################################################################################### Continue Game Loop ###########################################################################################
 
@@ -137,23 +170,12 @@ def step(action):
         pygame.draw.rect(screen, SQUARE_COLOR, pygame.Rect((square_pos.x-square_center[0],flip_y(square_pos.y)-square_center[1]), (square_width, square_height), round=square_rot))
 
         world.Step(1/60, 1, 1)                                                                                                             # Step the Box2D world; step(timestep, vel_step, pos_step)
-        #pygame.display.update()                                                                                                            # Update the Pygame display
-        #clock.tick(60)
-             
-    if success:
-        reward = 10
-        info = 'success'
-    else:
-        reward = -1
-        info = 'failed'
+        pygame.display.update()                                                                                                            # Update the Pygame display
+        clock.tick(60)
+        
 
-    terminated = 1
 
-    # observation is the last diff_x from each step
-    obs = diff_x
-    truncated = 0
 
-    return obs, reward, terminated, truncated, info
 
     # print('Done simulation')
     # pygame.quit()                                                                                                                          # Quit Pygame
@@ -168,21 +190,11 @@ def policy():
     result = random.randint(0,1500)
     return result
 
-
 def main():
     # Initialized reset
     reset()
-    for _ in range(1500):
-        print('=====attempt '+str(_+1)+' ======', )
-        action = policy()
-    
-        observation, reward, terminated, truncated, info = step(action)
-        if terminated or truncated:
-            reset()
-        print('action: ', action)
-        print('observation: ', observation)
-        print('reward:', reward)        
-        print('info: ', info)
+
+    step(1500)
 
 
 
@@ -196,7 +208,13 @@ if __name__ == "__main__":
     main()
 
 
+
+
 '''
-1. random
-2. if over 30 make a next random with less value if success try to increase value
+obs: last diff_x from each attempt
+action: random speed from 0 to 1500 (can be replaced by policy)
+step: 1 attempt of delivery
+reward: + successful & stay within diff < 30 unit; else - failed
+terminated: diff > 30 unit
+truncated: maximum time limit for the attempt
 '''
