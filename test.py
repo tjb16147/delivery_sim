@@ -189,7 +189,7 @@ def step(step_num):
 
 ####################################################################################### RL part #######################################################################################
 
-def policy():
+def policy(obs, reward):
 
     # replace with policy; for now it's random speed
     result = random.randint(0,1500)
