@@ -161,7 +161,7 @@ def draw():
 def policy():
 
     # replace with policy; for now it's random speed
-    result = random.randint(0,10)
+    result = random.randint(0,1500)
     return result
 
 def terminate_cond():
@@ -197,6 +197,7 @@ def main():
     # Initialized reset
     reset()
 
+    # Total steps
     for _ in range(1500):
 
         print('=====Step '+str(_+1)+' ======', )        
@@ -224,10 +225,13 @@ if __name__ == "__main__":
 
 
 '''
-obs: last diff_x from each attempt
+obs: (diff_x, rectangle velocity from each step)
 action: random speed from 0 to 1500 (can be replaced by policy)
-step: 1 attempt of delivery
-reward: + successful & stay within diff < 30 unit; else - failed
-terminated: diff > 30 unit
-truncated: maximum time limit for the attempt
+step: 1 timestep
+reward: + 10 stay within diff < 30 unit, +500 reaching the goal, else -1 failed
+terminated: diff > 30 unit, reach the goal
+truncated: maximum time limit for the attempt; will look through this again
+Objective: To find the optimal speed delivering the object(square) from left to right without the deviation of 30 unit
+Agent: Red rectangle moving in one direction only
 '''
+
