@@ -121,10 +121,10 @@ def draw():
     sim_time = pygame.time.get_ticks()/1000                                                                                                 # second
 
     # Handle events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
+    # for event in pygame.event.get():
+    #     if event.type == pygame.QUIT:
+    #         pygame.quit()
+    #         quit()
 
     ##################################################################################### Continue Game Loop ###########################################################################################
 
@@ -190,15 +190,16 @@ def get_reward():
 
 def get_observation():
     diff_x = (rect_body.position.x-square_body.position.x)
-    # deviation distance, rectangle velocity
-    return (diff_x, rect_body.linearVelocity)
-
+    # deviation distance between object, rectangle velocity in x-axis
+    return (diff_x, rect_body.linearVelocity.x)
 
 def main():
     # Initialized reset
     reset()
 
     for _ in range(1500):
+
+        print('=====Step '+str(_+1)+' ======', )        
         action = policy()
     
         observation, reward, terminated = step(action)
@@ -210,9 +211,6 @@ def main():
         print('observation: ', observation)
         print('reward:', reward)        
         #print('info: ', info)
-
-
-
 
 
 ####################################################################################### End RL part #######################################################################################
