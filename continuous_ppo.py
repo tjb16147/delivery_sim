@@ -74,8 +74,15 @@ if __name__ == "__main__":
     num_envs = 4
     learning_rate = 0.01
 
-    envs = gym.vector.SyncVectorEnv([DeliveryEnv for i in range(num_envs)])
+    def make_env():
+        def thunk():
+            env = DeliveryEnv()
+            env = gym.wrappers.NormalizeObservation(env)
+            return env
+        return thunk
 
+    envs = gym.vector.SyncVectorEnv([make_env() for i in range(num_envs)])
+    
 
     agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
@@ -85,7 +92,7 @@ if __name__ == "__main__":
     act_shape = envs.single_action_space.shape
     obs_size = np.array(obs_shape).prod()
     act_size = np.prod(act_shape)
-    num_steps = 2048
+    num_steps = 1012 #2048
     gamma = 0.99
     gae_lambda = 0.95
     batch_size = int(num_envs * num_steps)
@@ -136,6 +143,10 @@ if __name__ == "__main__":
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs = torch.Tensor(next_obs).to(device)
             next_done = torch.Tensor(done).to(device)
+
+
+        writer.add_scalar("learning/average_speed", actions.mean(), global_step)
+        writer.add_scalar("learning/average_reward", rewards.mean(), global_step)
 
 
         # bootstrap value if not done
@@ -246,10 +257,15 @@ if __name__ == "__main__":
         writer.add_scalar("losses/explained_variance", explained_var, global_step)
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
-
-
-        # evaluation
         
+
+        
+        """
+        # evaluation
+        terminal = False
+        while not terminal:
+            eval_env
+        """
 
 
 

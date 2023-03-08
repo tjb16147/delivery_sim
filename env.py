@@ -16,7 +16,7 @@ class DeliveryEnv(gym.Env):
 
 
         # gym setup
-        self.observation_space = spaces.Box(low=-1000, high=1000, shape=(4,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=-1000, high=1000, shape=(5,), dtype=np.float32)
         self.action_space = spaces.Box(low=-1000, high=1000, shape=(1,), dtype=np.float32)
 
         SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
@@ -24,7 +24,7 @@ class DeliveryEnv(gym.Env):
             pygame.init()
             self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-        
+
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
         self.TARGET_FPS = 1000 #60
@@ -97,10 +97,12 @@ class DeliveryEnv(gym.Env):
 
 
     def get_observation(self):
+        diff      =  self.rect_body.position.x - self.square_body.position.x
         return np.array((self.rect_body.position.x, 
-                        self.rect_body.linearVelocity.x,
-                        self.square_body.position.x,
-                        self.square_body.linearVelocity.x))
+                         self.rect_body.linearVelocity.x,
+                         self.square_body.position.x,
+                         self.square_body.linearVelocity.x,
+                         diff))
 
     def get_reward(self):
         
@@ -117,10 +119,13 @@ class DeliveryEnv(gym.Env):
         if self.rect_body.position.x >=699:
             reward += 1
         
-        # faster is better
-        reward += 0.01 * self.rect_body.linearVelocity.x
+        # distance to the goal
+        reward += 0.001  * (1 - (699 - self.rect_body.position.x)/699.)
         
+        # deviation of object
+        #reward += 0.001 * (1 - (30 - np.abs(diff_x))/30) 
         return reward
+
 
     def terminate_cond(self):
 
@@ -137,7 +142,9 @@ class DeliveryEnv(gym.Env):
 
     def step(self, action):
 
-        action = float(action[0])
+        # rescale action
+        action = float(action[0]) * 100
+
         self.rect_body.linearVelocity = (action, 0)
 
         self.world.Step(self.TIME_STEP, 1, 1)
@@ -196,7 +203,7 @@ if __name__ == "__main__":
         terminal = False
 
         while not terminal:
-            action = [20]
+            action = [100]
             obs,reward,terminal,_ ,_ =  env.step(action)
             epoch_reward += reward
             num_step += 1
