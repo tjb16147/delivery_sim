@@ -3,18 +3,35 @@ import Box2D
 import time, sys, os
 import random
 
-class DeliveryEnv:
-    def __init__(self):
-        pygame.init()
-        SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+from gymnasium import spaces
+import numpy as np
 
+import gymnasium as gym
+
+
+class DeliveryEnv(gym.Env):
+    metadata = {}
+
+    def __init__(self, display=False):
+
+
+        # gym setup
+        self.observation_space = spaces.Box(low=-1000, high=1000, shape=(4,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1000, high=1000, shape=(1,), dtype=np.float32)
+
+        SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
+        if display:
+            pygame.init()
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
-        self.TARGET_FPS = 60
+        self.TARGET_FPS = 1000 #60
         self.TIME_STEP  = 1.0 / self.TARGET_FPS
 
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
+
 
         self.world = Box2D.b2World(gravity=(0, -9.81))
         PPM = 200     
@@ -70,20 +87,20 @@ class DeliveryEnv:
         square_fixture = self.square_body.CreateFixture(shape=square_shape, density=obj_density, friction= obj_friction) 
 
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         self.rect_body.linearVelocity = (0, 0)
         self.rect_body.position = self.rect_position
         self.square_body.linearVelocity = (0,0)
         self.square_body.position = self.square_position
 
-        return self.get_observation()
+        return self.get_observation(), {}
 
 
     def get_observation(self):
-        return (self.rect_body.position.x, 
-                self.rect_body.linearVelocity.x,
-                self.square_body.position.x,
-                self.square_body.linearVelocity.x)
+        return np.array((self.rect_body.position.x, 
+                        self.rect_body.linearVelocity.x,
+                        self.square_body.position.x,
+                        self.square_body.linearVelocity.x))
 
     def get_reward(self):
         
@@ -120,17 +137,17 @@ class DeliveryEnv:
 
     def step(self, action):
 
+        action = float(action[0])
         self.rect_body.linearVelocity = (action, 0)
 
         self.world.Step(self.TIME_STEP, 1, 1)
-        pygame.display.flip()
         self.clock.tick(self.TARGET_FPS)
 
         obs = self.get_observation()
         reward = self.get_reward()
         terminal = self.terminate_cond()
 
-        return obs, reward, terminal
+        return obs, reward, terminal, False, {}
         
     def flip_y(self, y):
         return 600-y 
@@ -160,12 +177,16 @@ class DeliveryEnv:
                 self.flip_y(square_pos.y)-self.square_center[1]), 
                 (self.square_width, self.square_height), round=square_rot))
 
+        pygame.display.flip()
         pygame.display.update()
+
+    def close(self):
+        pygame.quit()
 
 
 if __name__ == "__main__":
 
-    env = DeliveryEnv()
+    env = DeliveryEnv(display=True)
     env.reset()
 
     for epoch in range(10):
@@ -175,8 +196,8 @@ if __name__ == "__main__":
         terminal = False
 
         while not terminal:
-            action = 20
-            obs,reward,terminal =  env.step(action)
+            action = [20]
+            obs,reward,terminal,_ ,_ =  env.step(action)
             epoch_reward += reward
             num_step += 1
             env.draw()
