@@ -147,7 +147,7 @@ class DeliveryEnv(gym.Env):
 
         self.rect_body.linearVelocity = (action, 0)
 
-        #skip = 100 # apply the same action for 100 steps
+        # apply the same action for 10 steps
         skip = 10
         for _ in range(skip):
             self.world.Step(self.TIME_STEP, 1, 1)

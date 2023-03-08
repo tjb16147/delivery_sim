@@ -71,7 +71,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-    num_envs = 32
+    num_envs = 24
     learning_rate = 0.01
 
     def make_env():
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     act_shape = envs.single_action_space.shape
     obs_size = np.array(obs_shape).prod()
     act_size = np.prod(act_shape)
-    num_steps = 256 #2048
+    num_steps = 1012
     gamma = 0.99
     gae_lambda = 0.95
     batch_size = int(num_envs * num_steps)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
                 print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
                 writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
                 writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
-                writer.add_scalar("charts/average_speed", actions.mean() ,global_step)
+                writer.add_scalar("charts/average_speed", 10.0 * actions.mean() ,global_step)
 
         # bootstrap value if not done
         with torch.no_grad():
