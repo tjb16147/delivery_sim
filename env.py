@@ -27,7 +27,7 @@ class DeliveryEnv(gym.Env):
 
         self.SCREEN_WIDTH = SCREEN_WIDTH
         self.SCREEN_HEIGHT = SCREEN_HEIGHT
-        self.TARGET_FPS = 1000 #60
+        self.TARGET_FPS = 5000 #60
         self.TIME_STEP  = 1.0 / self.TARGET_FPS
 
         self.clock = pygame.time.Clock()
@@ -147,8 +147,10 @@ class DeliveryEnv(gym.Env):
 
         self.rect_body.linearVelocity = (action, 0)
 
-        self.world.Step(self.TIME_STEP, 1, 1)
-        self.clock.tick(self.TARGET_FPS)
+        skip = 100 # apply the same action for 100 steps
+        for _ in range(skip):
+            self.world.Step(self.TIME_STEP, 1, 1)
+            self.clock.tick(self.TARGET_FPS)
 
         obs = self.get_observation()
         reward = self.get_reward()

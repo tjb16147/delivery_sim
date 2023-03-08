@@ -78,11 +78,11 @@ if __name__ == "__main__":
         def thunk():
             env = DeliveryEnv()
             env = gym.wrappers.NormalizeObservation(env)
+            env = gym.wrappers.RecordEpisodeStatistics(env)
             return env
         return thunk
 
     envs = gym.vector.SyncVectorEnv([make_env() for i in range(num_envs)])
-    
 
     agent = Agent(envs).to(device)
     optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
@@ -145,8 +145,15 @@ if __name__ == "__main__":
             next_done = torch.Tensor(done).to(device)
 
 
-        writer.add_scalar("learning/average_speed", actions.mean(), global_step)
-        writer.add_scalar("learning/average_reward", rewards.mean(), global_step)
+            if "final_info" not in infos:
+                continue
+
+            for info in infos["final_info"]:
+                if info is None:
+                    continue
+                print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
+                writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                writer.add_scalar("charts/episodic_length", info["episode"]["l"], global_step)
 
 
         # bootstrap value if not done
@@ -258,16 +265,6 @@ if __name__ == "__main__":
         print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
         
-
-        
-        """
-        # evaluation
-        terminal = False
-        while not terminal:
-            eval_env
-        """
-
-
 
     envs.close()
     writer.close()
