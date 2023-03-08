@@ -120,10 +120,10 @@ class DeliveryEnv(gym.Env):
             reward += 1
         
         # distance to the goal
-        reward += 0.001  * (1 - (699 - self.rect_body.position.x)/699.)
+        #reward += 0.001  * (1 - (699 - self.rect_body.position.x)/699.)
         
-        # deviation of object
-        #reward += 0.001 * (1 - (30 - np.abs(diff_x))/30) 
+
+
         return reward
 
 

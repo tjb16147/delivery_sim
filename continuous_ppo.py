@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
 
     num_envs = 24
-    learning_rate = 0.01
+    learning_rate = 0.001
 
     def make_env():
         def thunk():
