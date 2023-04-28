@@ -17,7 +17,7 @@ This delivery simulator is a simplified version in 2D using Pygame and Box2D-pyt
 * Ubuntu: ```pip install swig```
 * Windows: Download [swig](https://www.swig.org/download.html), extract, and edit windows environment variable inside Path section
 ![Windows environment variables](image/1-path_setup.png)
-7. Box2D ```pip install box2d```
+7. Box2D ```pip install box2d box2d-kengz```
 
 ---
 
@@ -165,23 +165,33 @@ For the mICO, the method is pretty much straight forward where we can change pro
 ## PPO-RL
 For the PPO-RL, there will be more steps to obtain learnt speed as the training process generates model as the output and apply that into the environment again to find the actual output speed. Details are in the following paragraphs:
 
-1. The PPO script is executed to create the multiple agents and environment (24 agents-environment in this case), the training will automatically executed and return the results shown in the tensorboard. User can stop the training at the certain point where it should be stopped. For this experiment, the training is set top stop when it hits around 5millions steps in total. 
+1. The PPO script is executed to create the multiple agents and environment (24 agents-environment in this case), the training will automatically executed and return the results shown in the tensorboard. User can stop the training at the certain point where it should be stopped. For this experiment, the training is set top stop when it hits around 5 millions steps in total. 
 
-2. After the training is done, user can pick the model at the appropriate point (reasonable average speed, high amount of episodic return as 1). In the shown figure, we pick the model at "".
+2. After the training is done, user can pick the model at the appropriate point (reasonable average speed, high amount of episodic return as 1). In the example figure below, we pick the model at around 2.5 million steps as the it generates the higher chance of episodic return and reasonable average_speed from the PPO environments.
 
-3. Once the model is picked, we use the eval() method to find the average speed by picking up the first five episodic return that considering as successfully delivered (as the value of 1 on each return) and average those values to find the average speed.
+![PPL_training](image/2-PPO_training.png)
+
+3. Once the model is picked, we use the eval() method (on load_RL_model.py) to find the average speed by picking up the first five episodic return that considering as successfully delivered (as the value of 1 on each return) and average those values to find the average speed.
 
 # Result
 
 
 
-## Graph
+After the experiment is finished, we summarized and compare the performance between PPO and mICO into the figure below:
 
- 
+![result](image/3-comparison.png)
 
-## Comparison
-1. in term of steps it reaches
-2. in term of speed obtain
+According to the figure, the PPO learning takes the huge amount of steps to train and find the optimal model (millions steps) and apply the model to find the speed while the mICO learning only takes much fewer steps (hundreds steps) to find the optimal weight paramters to find the speed. In addition, the PPO learning generally generates the average of the output speed less than the mICO learning.
+
+Moreover, the output speed from the learning can be tested in the ```Environment_Template.py``` where user can manually input the speed and control the tray via the arrow keys. The figures below is the screenshots from one of the experiment (300g_0.5f) between mICO (14 m/s) and PPO (8 m/s).
+
+### mICO screenshot
+![mICO_result](image/4-mICO_experiment.png)
+
+### PPO screenshot
+![PPO_result](image/5-PPO_experiment.png)
+
+From the screenshots, we can see that the object on the mICO slipped more than PPO but still staying under the acceptable range we defined.
 
 
 ## Conclusion

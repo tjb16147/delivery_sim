@@ -107,15 +107,12 @@ def main():
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            pass
             rect_body.linearVelocity = (-1500, 0)                                                                                           # For manual test; moving to the left
             print(rect_body.linearVelocity)
         if keys[pygame.K_RIGHT]:
-            pass
-            rect_body.linearVelocity = (1500, 0)                                                                                                # For manual test; moving to the right
+            rect_body.linearVelocity = (8, 0)                                                                                                # For manual test; moving to the right
             print(rect_body.linearVelocity)
         if keys[pygame.K_DOWN]:
-            pass
             rect_body.linearVelocity = (0, 0)                                                                                                # For manual test; moving to the right
             print(rect_body.linearVelocity)
 
