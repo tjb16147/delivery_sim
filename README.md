@@ -197,3 +197,10 @@ From the screenshots, we can see that the object on the mICO slipped more than P
 ## Conclusion
 The mICO takes less time consuming and receive the optimal speed faster than the RL (PPO) as the simple nueral network is fast and can update in a real-time from the feedback while Reinforcement Learning has to train for the model and verify with the evaluation method to obtain the proper speed. In additional, PPO starts off with the guess of an initial speed (same as the human behavior where we have no clue for the first time) and adjust it through the training process (same as the manual tune of the human). One of the issue that have been founded in the PPO-RL is there is a chance where the PPO is keep failing to deliver the object because the speed initialization is too far away from the appropriate speed point and the updates are slow due to the nature of the mechanisms.
 
+# Update
+
+### Comparison between mISO and mICO
+
+![mISO_with_noise_result](image/6-mISO_mICO_comparison.png)
+
+The comparison of mISO and mICO has been added to exhibit the difference between these two mechanisms. In this part, the mISO learning uses a change of output to update a learning weight while the mICO uses a change of reflexive signal instead. In addition, we introduce a noise term added to the position of the object (between 0-5 px) to simulate the deviation of the object due to the external disturbance. The results are exhibited on the figure above where the mISO learning stops learning at 4th attempt (2.25 s) due to the unstable output causing the learning weight exceeding the value of 1, while the mICO can continue to learn until it reaches the optimal weight at 6th attempt (where the reflexive signal is avoided). Noted that the flat line in both graphs represented the object is located in the exemption area. Hence, there is no learning from both mechanisms.
