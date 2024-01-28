@@ -122,6 +122,7 @@ This section is the part where neural output is used as the threshold to scale w
 
 ## Logs
 mICO log can be found at \data folder in form of .csv file
+
 ---
 
 # RL Parts
