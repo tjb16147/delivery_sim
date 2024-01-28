@@ -1,6 +1,8 @@
+---
+
 # Delivery simulator
 
-![Windows environment variables](image/0-delivery_simulator.png)
+![Windows environment variables](delivery_sim/image/0-delivery_simulator.png)
 
 This delivery simulator is a simplified version in 2D using Pygame and Box2D-python as the physics and game engine. The objective of the simulation is to transport the object (blue square) which is placed on top of the tray (red rectangle) from the bottom-left of the screen to the bottom-right of the screen.
 
@@ -16,7 +18,7 @@ This delivery simulator is a simplified version in 2D using Pygame and Box2D-pyt
 6. Swig 
 * Ubuntu: ```pip install swig```
 * Windows: Download [swig](https://www.swig.org/download.html), extract, and edit windows environment variable inside Path section
-![Windows environment variables](image/1-path_setup.png)
+![Windows environment variables](delivery_sim/image/1-path_setup.png)
 7. Box2D ```pip install box2d box2d-kengz```
 
 ---
@@ -124,7 +126,7 @@ mICO log can be found at \data folder in form of .csv file
 
 # RL Parts
 ## Template
-For the Reinforcement learning part, we use the "Proximal Policy Optimization", the policy-based method to directly optimize the policy without explicitly learning a value functions. In addition, the mechanism of PPO try to update the policy closely to the previous policy to make sure that the policy remain stable on each update. In this case, the initial speed of the tray is starting from the randomness and the learning mechanism will slowly update its policy and its actions through the reinforcement learning.
+For the Reinforcement learning part, we use the "Proximal Policy Optimization", the policy-based method (John et al., 2017) to directly optimize the policy without explicitly learning a value functions. In addition, the mechanism of PPO try to update the policy closely to the previous policy to make sure that the policy remain stable on each update. In this case, the initial speed of the tray is starting from the randomness and the learning mechanism will slowly update its policy and its actions through the reinforcement learning.
 
 ## Environment
 The simulation environment has been converted into the object-oriented structure in order to setup the multiple environment (running agents in multiple environment at the same time) called on the reinforcement learning module. Also the multiple methods for reinforcement learning (i.e, get_reward, get_observation, etc.) are added in this module.
@@ -169,7 +171,7 @@ For the PPO-RL, there will be more steps to obtain learnt speed as the training 
 
 2. After the training is done, user can pick the model at the appropriate point (reasonable average speed, high amount of episodic return as 1). In the example figure below, we pick the model at around 2.5 million steps as the it generates the higher chance of episodic return and reasonable average_speed from the PPO environments.
 
-![PPL_training](image/2-PPO_training.png)
+![PPL_training](delivery_sim/image/2-PPO_training.png)
 
 3. Once the model is picked, we use the eval() method (on load_RL_model.py) to find the average speed by picking up the first five episodic return that considering as successfully delivered (as the value of 1 on each return) and average those values to find the average speed.
 
@@ -179,17 +181,17 @@ For the PPO-RL, there will be more steps to obtain learnt speed as the training 
 
 After the experiment is finished, we summarized and compare the performance between PPO and mICO into the figure below:
 
-![result](image/3-comparison.png)
+![result](delivery_sim/image/3-comparison.png)
 
 According to the figure, the PPO learning takes the huge amount of steps to train and find the optimal model (millions steps) and apply the model to find the speed while the mICO learning only takes much fewer steps (hundreds steps) to find the optimal weight paramters to find the speed. In addition, the PPO learning generally generates the average of the output speed less than the mICO learning.
 
 Moreover, the output speed from the learning can be tested in the ```Environment_Template.py``` where user can manually input the speed and control the tray via the arrow keys. The figures below is the screenshots from one of the experiment (300g_0.5f) between mICO (14 m/s) and PPO (8 m/s).
 
 ### mICO screenshot
-![mICO_result](image/4-mICO_experiment.png)
+![mICO_result](delivery_sim/image/4-mICO_experiment.png)
 
 ### PPO screenshot
-![PPO_result](image/5-PPO_experiment.png)
+![PPO_result](delivery_sim/image/5-PPO_experiment.png)
 
 From the screenshots, we can see that the object on the mICO slipped more than PPO but still staying under the acceptable range we defined.
 
@@ -197,10 +199,14 @@ From the screenshots, we can see that the object on the mICO slipped more than P
 ## Conclusion
 The mICO takes less time consuming and receive the optimal speed faster than the RL (PPO) as the simple nueral network is fast and can update in a real-time from the feedback while Reinforcement Learning has to train for the model and verify with the evaluation method to obtain the proper speed. In additional, PPO starts off with the guess of an initial speed (same as the human behavior where we have no clue for the first time) and adjust it through the training process (same as the manual tune of the human). One of the issue that have been founded in the PPO-RL is there is a chance where the PPO is keep failing to deliver the object because the speed initialization is too far away from the appropriate speed point and the updates are slow due to the nature of the mechanisms.
 
-# Update
+# Comparison between mISO and mICO
 
-### Comparison between mISO and mICO
+![mISO_with_noise_result](delivery_sim/image/6-mISO_mICO_comparison.png)
 
-![mISO_with_noise_result](image/6-mISO_mICO_comparison.png)
+The comparison of mISO and mICO is performed to exhibit the difference between these two mechanisms. In this part, the mISO learning uses a change of output to update a learning weight while the mICO uses a change of reflexive signal instead. In the test, we introduce a noise term added to the position of the object (between 0-5 px) to simulate the deviation of the object due to the external disturbance. The results are exhibited on the figure above where the mISO learning mechanism keeps on growing the learning weight due to the unstable output causing the weight exceeding the value of 1 meaning that the learning is failed due to the robot decide not to move itself, while the mICO can continue to learn until it reaches the optimal weight after 5th attempt (where the reflexive signal is avoided) and the learning process stops. Noted that the flat line in both graphs represented the object is located in the exemption area. Hence, there is no learning from both mechanisms. For the comparison, mISO learning mechanism is based on a differential Hebbian learning rule (ISO-learning) (Porr and Woergoetter, 2003). In other words, we implemented the ISO learning rule in our neural setup.
 
-The comparison of mISO and mICO has been added to exhibit the difference between these two mechanisms. In this part, the mISO learning uses a change of output to update a learning weight while the mICO uses a change of reflexive signal instead. In addition, we introduce a noise term added to the position of the object (between 0-5 px) to simulate the deviation of the object due to the external disturbance. The results are exhibited on the figure above where the mISO learning stops learning at 4th attempt (2.25 s) due to the unstable output causing the learning weight exceeding the value of 1, while the mICO can continue to learn until it reaches the optimal weight at 6th attempt (where the reflexive signal is avoided). Noted that the flat line in both graphs represented the object is located in the exemption area. Hence, there is no learning from both mechanisms.
+# References:
+
+[John et al., 2017] John S., Filip W., Prafulla D., Alec R. and Oleg K. (2017) Proximal Policy Optimization Algorithms. arXiv ePrint arXiv: 107.06347.
+
+[Porr and Woergoetter, 2003] Porr B. Woergoetter F. (2003) Isotropic sequence order learning in a closed loop behavioral system. Roy Soc Phil TransMathematical Physical Engineer Sci: 361:2225-2244
